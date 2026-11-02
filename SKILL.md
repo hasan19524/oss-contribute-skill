@@ -1,85 +1,259 @@
-# Skill: oss-contribute (Open Source Contribution Workflow)
+# Skill: oss-contribute — End-to-End Open Source Contribution Workflow
 
 ## Purpose
-Reusable checklist for making clean, high-quality open source PRs. Updated after every contribution attempt and every maintainer feedback/error. Always follow this before opening a PR.
+A complete, production-grade workflow for contributing to open source repositories end-to-end — from finding an issue to getting a PR merged. Written from both the contributor and maintainer perspective. Updated after every contribution attempt (success or failure) so it stays a living, reliable guide.
 
-## Pre-flight (before writing code)
-1. **Search existing PRs** for the issue keyword:
-   `gh search prs --repo <owner/repo> --state open "<issue# or title>"`
-   If an open PR exists, STOP — do not duplicate.
-2. **Search existing issues** to confirm the bug is real and unclaimed:
-   `gh issue view <n> --repo <owner/repo>`
-3. **Read CONTRIBUTING.md** of the repo. Note test command, commit style, PR template.
-4. **Check the issue has no "in progress" / assignee.**
+---
 
-## Branching (CRITICAL — learned from express #7581-#7585 failures)
-- Always branch from a CLEAN upstream base:
-  `git fetch upstream && git checkout -b fix/<slug> upstream/<default-branch>`
-- NEVER branch from a previous feature branch (causes stacked commits in PRs).
-- One change per branch. One PR per branch.
+## Phase 0: Find the Right Issue
 
-## Implementation
-- Reproduce the bug first (write a failing test or minimal repro).
-- Make the smallest correct fix.
-- Add a regression test that fails before the fix and passes after.
-- Run the FULL test suite locally (not just the touched file).
-- Check for repo-required files: `PRE_RELEASE_CHANGELOG.md`, changesets, etc. (read AGENTS.md / CONTRIBUTING.md).
+### 1. Pick a welcoming repo
+Check before you invest time:
+- **CONTRIBUTING.md exists** and is welcoming to outside contributors
+- **Recent activity** — last commit within 30 days, issues/PRs getting responses
+- **Maintainer engagement** — maintainers reply to issues, review PRs
+- **Not collaborator-only** — look for "CreatePullRequest permission error" or "PRs limited to collaborators" in issue comments (means you're blocked)
+- **Not locked/spam-locked** — if the maintainer has locked issues calling out bots/AI, stay away
+- **Labels** — "help wanted", "good first issue", "beginner-friendly" are good signs; "pending release" often means already fixed
 
-## Pre-PR checklist (in-depth verification)
-- [ ] Diff contains ONLY this PR's change (`git diff upstream/master...HEAD`).
-- [ ] No commits from other PRs leaked in.
-- [ ] Tests pass locally.
-- [ ] Commit message follows repo convention.
-- [ ] PR title references the issue: `fix: ... (Fixes #N)`.
-- [ ] PR body explains root cause + fix + test.
+### 2. Search existing work FIRST (critical)
+Before writing any code:
+```bash
+# Search open PRs for the issue keyword
+gh search prs --repo <owner/repo> --state open "<issue number or title>"
+gh search prs --repo <owner/repo> --state closed "<issue number or title>"
+# Search issues
+gh search issues --repo <owner/repo> --state open "<keyword>"
+# Check if already fixed in default branch
+git fetch upstream
+git log --oneline upstream/main --grep="<keyword>" | head -5
+```
+**Stop here if:** an open PR already exists, the issue was already fixed, or multiple people are already working on it.
 
-## Opening the PR
-- `gh pr create --base <default> --head <user>:<branch>` with clear title/body.
-- Wait for CI. If CI fails, fix on the same branch and push.
-- Do NOT open another PR to the same repo until this one is reviewed/closed.
+### 3. Read the issue completely
+- Reproduce the bug yourself before touching code
+- Check if there's a repro, screenshots, or minimal example
+- Note what the maintainer explicitly asked for (or rejected)
+- Check `AGENTS.md` if it exists — it often has specific PR requirements (tests, changelog, etc.)
 
-## After feedback
-- Address review comments on the SAME branch (push new commits).
-- If closed as duplicate: accept gracefully, note the original PR number in this skill.
-- If closed as "won't fix": note the reason; don't retry.
+---
 
-## Lessons learned (changelog)
-- 2026-11-02: express PRs #7581-#7585 all closed — stacked commits + duplicates. Lesson: clean base branch + search first.
-- 2026-11-02: axios PR #11413 open but Greptile found allocation-guard regression, missing tests, missing changelog. Lesson: read AGENTS.md requirements before PR.
-- 2026-11-02: prettier issues #20355, #20370, #20378, #20381, #20404, #20220 all already had open PRs or were fixed on main. Lesson: always search PRs before starting.
+## Phase 1: Setup (Clean Base Branch — CRITICAL)
 
-## Dependencies & Tools (exact)
-- **GitHub CLI (`gh`)**: authenticated (`gh auth status`). Used for search, fork, clone, PR. Token scopes: repo, workflow.
-- **git**: configured user.name/user.email.
-- **Node.js + npm**: for running tests in JS repos.
-- **Python 3**: for email skill (IMAP/SMTP).
-- **agent-browser**: for web research (optional; may time out on heavy sites).
-- **webfetch**: for fetching GitHub issues/PRs/docs (preferred for static pages).
-- **email skill**: reads inbox via IMAP (Gmail app password). Used to check PR feedback.
-- **OpenCode skills catalog**: load via `skill` tool by id (e.g., `github-engineer`, `code-reviewer`, `test-engineer`).
+```bash
+# 1. Fork + clone (only once per repo)
+gh repo fork <owner/repo> --clone
+cd <repo>
 
-## Exact workflow (step-by-step commands)
-1. Search issues: `gh search issues --repo <owner/repo> --state open --limit 15 --json number,title`
-2. Search existing PRs: `gh search prs --repo <owner/repo> --state open "<issue#>"`
-3. Fetch issue: `gh issue view <n> --repo <owner/repo>` or webfetch
-4. Read CONTRIBUTING.md: `gh repo view <owner/repo> --web` or fetch raw file
-5. Fork + clone: `gh repo fork <owner/repo> --clone` (creates upstream remote)
-6. Branch from clean base: `git fetch upstream && git checkout -b fix/<slug> upstream/<default-branch>`
-7. Reproduce + fix + test (repo-specific test command)
-8. Verify diff is clean: `git diff upstream/<default>...HEAD`
-9. Commit: `git commit -m "fix: ... (Fixes #N)"`
-10. Push: `git push origin fix/<slug>`
-11. Open PR: `gh pr create --base <default> --head <user>:fix/<slug> --title "..." --body "Fixes #N ..."`
-12. Monitor: `gh pr view <n> --json state,mergeable` and `gh pr checks <n>`
-13. Check email for maintainer feedback: use email skill (IMAP).
-14. If feedback: push fixes to same branch; reply via `gh pr comment`. Bot reviews (Greptile, etc.) count — address every finding before expecting merge.
+# 2. Add upstream remote
+git remote add upstream https://github.com/<owner/repo>.git
 
-## Lessons learned (changelog)
-- 2026-11-02: express PRs #7581-#7585 all closed — stacked commits + duplicates. Lesson: clean base branch + search first.
-- 2026-11-02: axios PR #11413 open but Greptile found allocation-guard regression, missing tests, missing changelog. Lesson: read AGENTS.md requirements before PR.
-- 2026-11-02: prettier issues #20355, #20370, #20378, #20381, #20404, #20220 all already had open PRs or were fixed on main. Lesson: always search PRs before starting.
-- 2026-11-02: chalk issue #690 locked as spam (maintainer Qix- called out AI agents). Lesson: some repos are hostile to AI contributions; check maintainer tone / recent issue locks before investing. Prefer repos with welcoming CONTRIBUTING.md and active maintainer engagement.
-- 2026-11-02: commander.js #2651 already fixed in develop (commit 1536d5b). Lesson: check `git log` on develop/main for the fix before starting; "pending release" label often means already merged.
-- 2026-11-02: zod issues #6713, #6709 have multiple people working / PRs limited to collaborators. Lesson: check if repo accepts external PRs; check issue activity and comments.
-- 2026-11-02: commander.js #2651 labeled "pending release" — likely already fixed in develop. Lesson: check labels and recent commits before investing.
-- 2026-11-02: axios PR #11413 — Greptile found 3 issues: (1) allocation-guard regression where estimate underestimates raw-body fallback allocation, (2) missing regression tests for invalid percent-escapes, (3) missing PRE_RELEASE_CHANGELOG.md entry. All three fixed: estimate now returns body.length for invalid escapes, added 4 regression tests, added changelog entry. PR still open awaiting re-review/merge.
+# 3. ALWAYS branch from clean upstream default branch
+git fetch upstream
+git checkout -b fix/<slug> upstream/<default-branch>
+# e.g. git checkout -b fix/subdomains-ipv6 upstream/master
+#      git checkout -b fix/fromdatauri-stray-percent upstream/v1.x
+
+# 4. NEVER branch from a previous feature branch
+#    (causes stacked commits — maintainers hate this)
+```
+
+**Golden rule:** One change per branch. One PR per branch. Never stack PRs.
+
+---
+
+## Phase 2: Implement
+
+### 1. Reproduce first
+Write a failing test or minimal repro script that demonstrates the bug. Confirm it fails before your fix.
+
+### 2. Make the smallest correct fix
+- Touch the minimum number of files
+- Match the existing code style (Prettier, ESLint, Biome, etc.)
+- No unrelated refactors, no cosmetic changes
+
+### 3. Add a regression test
+- Test that fails BEFORE the fix and passes AFTER
+- Cover edge cases (lone %, invalid escape, mixed escapes, etc.)
+- Match the project's test framework (vitest, jest, mocha, etc.)
+
+### 4. Run the FULL test suite locally
+```bash
+npm test           # or the repo's test command
+npm run check      # lint + typecheck + format
+```
+**Do not push if any test fails.** Don't assume "it works on my machine" is enough.
+
+### 5. Check repo-specific requirements
+Read `AGENTS.md`, `CONTRIBUTING.md`, `PRE_RELEASE_CHANGELOG.md`, changeset config:
+- Does the repo require a changelog entry? (`PRE_RELEASE_CHANGELOG.md`)
+- Does it require tests for every bug fix? (`AGENTS.md`)
+- Does it require docs updates?
+- Do NOT update CHANGELOG.md or version numbers if maintainers say they handle that (commander.js example)
+
+---
+
+## Phase 3: Verify Your Diff is Clean
+
+```bash
+# See exactly what your PR will contain
+git diff upstream/<default-branch>...HEAD
+
+# Verify: ONLY your fix + test + changelog. No commits from other PRs.
+# Verify: No debugging console.log, no temp files, no unrelated changes.
+```
+If you see commits from earlier PRs in your diff, **abort and rebase onto a clean base.** Stacked commits got express PRs closed.
+
+---
+
+## Phase 4: Commit & Push
+
+```bash
+git add <changed files>
+git commit -m "fix: <concise description> (Fixes #<issue number>)"
+git push origin fix/<slug>
+```
+
+Commit message conventions vary — match the repo (Conventional Commits: `fix:`, `feat:`, `docs:`, etc.).
+
+---
+
+## Phase 5: Open the PR
+
+```bash
+gh pr create \
+  --base <default-branch> \
+  --head <your-username>:fix/<slug> \
+  --title "fix: <concise description>" \
+  --body "Fixes #<issue number>
+
+## What changed
+- Root cause
+- Fix applied
+- Test added
+
+## Testing
+- Ran full test suite locally
+- Added regression test"
+```
+
+### PR body should answer:
+- What problem are you solving?
+- What issue does this relate to? (`Fixes #N`)
+- Suggested CHANGELOG summary (if maintainers handle changelogs)
+- Any decisions you'd like feedback on
+
+---
+
+## Phase 6: Monitor & Respond (Critical)
+
+```bash
+# Check CI status
+gh pr checks <pr-number>
+gh pr view <pr-number> --json state,mergeable
+
+# Watch for comments
+gh pr view <pr-number> --json comments
+```
+
+### Handle ALL feedback:
+- **Maintainer comments:** Address each one, push to the **same branch**, reply
+- **Bot reviews (Greptile, CodeQL, etc.):** These count. Address every finding:
+  - Allocation-guard regression → fix the estimate
+  - Missing tests → add them
+  - Missing changelog → add `PRE_RELEASE_CHANGELOG.md` entry
+  - Bot says "not safe to merge until..." → do not consider it done until resolved
+- **CI failures:** Fix on the same branch, push, re-check
+
+**Do not open a new PR** to the same repo until the current one is reviewed/closed.
+
+---
+
+## Phase 7: After Merge/Close
+
+### If merged:
+- Celebrate. Your contribution graph and Pull Shark badge update.
+- Delete your feature branch: `git branch -d fix/<slug>`
+
+### If closed as duplicate:
+- Accept gracefully. Note the original PR number. Don't retry.
+
+### If closed as "won't fix":
+- Note the reason. Don't argue with maintainers.
+
+### If the maintainer asks you to stop (e.g. "stop creating duplicate PRs"):
+- Stop immediately. Review your process. Fix the workflow before contributing again.
+
+---
+
+## Community / Maintainer Perspective (What maintainers actually want)
+
+If you were a maintainer, you'd want contributors to:
+
+1. **Search first** — don't duplicate existing work
+2. **Small, focused PRs** — one concern, easy to review in minutes
+3. **Tests included** — don't make me write tests for your fix
+4. **Clean diff** — no stacked commits, no unrelated changes
+5. **Follow CONTRIBUTING.md** — shows respect for project process
+6. **Respond to feedback** — don't abandon your PR after opening
+7. **Accept decisions** — if I say "won't fix" or "duplicate", move on
+8. **Don't spam** — 5 PRs to one repo in an hour looks like a bot
+
+---
+
+## Lessons Learned (Updated After Every Attempt)
+
+| Date | Repo | Outcome | Lesson |
+|------|------|---------|--------|
+| 2026-11-02 | expressjs/express | 5 PRs closed, none merged | Stacked commits + duplicates + maintainer asked to stop. Clean base branch + search first. |
+| 2026-11-02 | axios/axios | PR #11413 open, Greptile findings | Greptile bot reviews count. Fixed: allocation-guard regression, 4 regression tests, PRE_RELEASE_CHANGELOG.md entry. Still awaiting re-review. |
+| 2026-11-02 | prettier/prettier | Issues already had open PRs or fixed on main | Always search PRs before starting work. |
+| 2026-11-02 | chalk/chalk | Issue #690 locked as spam (maintainer called out AI agents) | Some repos are hostile to AI contributions. Check maintainer tone and issue locks before investing. |
+| 2026-11-02 | commander.js | Issue #2651 already fixed in develop | Check `git log` on develop/main; "pending release" label often means already merged. |
+| 2026-11-02 | colinhacks/zod | PRs limited to collaborators; multiple people working | Check if repo accepts external PRs; check issue activity/comments first. |
+
+---
+
+## Maintenance Rule
+
+**After every contribution attempt** (success, failure, rejection, or bot review):
+1. Append a row to "Lessons Learned" above
+2. If a new failure mode appears, add it to the relevant phase checklist
+3. Push the updated skill to your public skill repo so others benefit
+
+---
+
+## Quick Command Reference
+
+```bash
+# Find issues
+gh search issues --repo <owner/repo> --state open --limit 20 --json number,title
+
+# Check for existing PRs
+gh search prs --repo <owner/repo> --state open "<issue#>"
+
+# Fork + clone
+gh repo fork <owner/repo> --clone
+
+# Clean branch
+git fetch upstream && git checkout -b fix/<slug> upstream/<default>
+
+# Commit
+git commit -m "fix: <desc> (Fixes #N)"
+
+# Push
+git push origin fix/<slug>
+
+# Open PR
+gh pr create --base <default> --head <user>:fix/<slug> --title "..." --body "..."
+
+# Monitor
+gh pr checks <pr-number>
+gh pr view <pr-number>
+```
+
+---
+
+## Success = Merge, Not Just PR
+
+Opening a PR is not success. **Getting merged is success.** Everything in this workflow is designed to maximize the probability that a maintainer will review, approve, and merge your PR — and want you to contribute again.
