@@ -72,7 +72,7 @@ Reusable checklist for making clean, high-quality open source PRs. Updated after
 11. Open PR: `gh pr create --base <default> --head <user>:fix/<slug> --title "..." --body "Fixes #N ..."`
 12. Monitor: `gh pr view <n> --json state,mergeable` and `gh pr checks <n>`
 13. Check email for maintainer feedback: use email skill (IMAP).
-14. If feedback: push fixes to same branch; reply via `gh pr comment`.
+14. If feedback: push fixes to same branch; reply via `gh pr comment`. Bot reviews (Greptile, etc.) count — address every finding before expecting merge.
 
 ## Lessons learned (changelog)
 - 2026-11-02: express PRs #7581-#7585 all closed — stacked commits + duplicates. Lesson: clean base branch + search first.
@@ -82,3 +82,4 @@ Reusable checklist for making clean, high-quality open source PRs. Updated after
 - 2026-11-02: commander.js #2651 already fixed in develop (commit 1536d5b). Lesson: check `git log` on develop/main for the fix before starting; "pending release" label often means already merged.
 - 2026-11-02: zod issues #6713, #6709 have multiple people working / PRs limited to collaborators. Lesson: check if repo accepts external PRs; check issue activity and comments.
 - 2026-11-02: commander.js #2651 labeled "pending release" — likely already fixed in develop. Lesson: check labels and recent commits before investing.
+- 2026-11-02: axios PR #11413 — Greptile found 3 issues: (1) allocation-guard regression where estimate underestimates raw-body fallback allocation, (2) missing regression tests for invalid percent-escapes, (3) missing PRE_RELEASE_CHANGELOG.md entry. All three fixed: estimate now returns body.length for invalid escapes, added 4 regression tests, added changelog entry. PR still open awaiting re-review/merge.
