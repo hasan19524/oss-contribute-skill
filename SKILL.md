@@ -78,5 +78,7 @@ Reusable checklist for making clean, high-quality open source PRs. Updated after
 - 2026-11-02: express PRs #7581-#7585 all closed — stacked commits + duplicates. Lesson: clean base branch + search first.
 - 2026-11-02: axios PR #11413 open but Greptile found allocation-guard regression, missing tests, missing changelog. Lesson: read AGENTS.md requirements before PR.
 - 2026-11-02: prettier issues #20355, #20370, #20378, #20381, #20404, #20220 all already had open PRs or were fixed on main. Lesson: always search PRs before starting.
-- 2026-11-02: zod issues #6713, #6709 have multiple people working / PRs limited to collaborators. Lesson: check if repo accepts external PRs; check issue activity.
+- 2026-11-02: chalk issue #690 locked as spam (maintainer Qix- called out AI agents). Lesson: some repos are hostile to AI contributions; check maintainer tone / recent issue locks before investing. Prefer repos with welcoming CONTRIBUTING.md and active maintainer engagement.
+- 2026-11-02: commander.js #2651 already fixed in develop (commit 1536d5b). Lesson: check `git log` on develop/main for the fix before starting; "pending release" label often means already merged.
+- 2026-11-02: zod issues #6713, #6709 have multiple people working / PRs limited to collaborators. Lesson: check if repo accepts external PRs; check issue activity and comments.
 - 2026-11-02: commander.js #2651 labeled "pending release" — likely already fixed in develop. Lesson: check labels and recent commits before investing.
