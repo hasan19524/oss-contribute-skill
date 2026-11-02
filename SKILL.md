@@ -72,6 +72,7 @@ Write a failing test or minimal repro script that demonstrates the bug. Confirm 
 - Match the existing code style (Prettier, ESLint, Biome, etc.)
 - No unrelated refactors, no cosmetic changes
 - **If the function you're changing has multiple callers, check ALL of them first** — a fix that's correct for one caller can break another (e.g. `estimateDataURLBytes` is used by both the Node http adapter AND Fetch; fixing one broke the other)
+- **For buffer/allocation estimates, always use byte length, not character count** — `str.length` (UTF-16 code units) ≠ `Buffer.byteLength(str, 'utf8')` for non-ASCII strings
 
 ### 3. Add a regression test
 - Test that fails BEFORE the fix and passes AFTER
@@ -207,7 +208,7 @@ If you were a maintainer, you'd want contributors to:
 | Date | Repo | Outcome | Lesson |
 |------|------|---------|--------|
 | 2026-11-02 | expressjs/express | 5 PRs closed, none merged | Stacked commits + duplicates + maintainer asked to stop. Clean base branch + search first. |
-| 2026-11-02 | axios/axios | PR #11413 open, Greptile findings | Greptile bot reviews count. Fixed: allocation-guard regression, 4 regression tests, changelog entry. **Follow-up finding (my first fix broke Fetch's estimate)**: put check only in `estimateDataURLBufferAllocation` (Node), never in `estimateDataURLBytes` (used by Fetch too). Tests 60/60, lint/format clean, pushed. |
+| 2026-11-02 | axios/axios | PR #11413 open, Greptile findings | Greptile bot reviews count. Fixed: allocation-guard regression, 4 regression tests, changelog entry. **Follow-up 1**: put check only in `estimateDataURLBufferAllocation` (Node), never in `estimateDataURLBytes` (used by Fetch too). **Follow-up 2**: allocation estimates must use **UTF-8 byte length**, not character count — `body.length` underestimates `Buffer.from(body, 'utf8')` for non-ASCII (é = 2 chars = 3 bytes). Verified fix against Greptile's exact cases before pushing. Tests 1708 pass, lint/format clean. |
 | 2026-11-02 | prettier/prettier | Issues already had open PRs or fixed on main | Always search PRs before starting work. |
 | 2026-11-02 | chalk/chalk | Issue #690 locked as spam (maintainer called out AI agents) | Some repos are hostile to AI contributions. Check maintainer tone and issue locks before investing. |
 | 2026-11-02 | commander.js | Issue #2651 already fixed in develop | Check `git log` on develop/main; "pending release" label often means already merged. |
