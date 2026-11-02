@@ -73,6 +73,10 @@ Write a failing test or minimal repro script that demonstrates the bug. Confirm 
 - No unrelated refactors, no cosmetic changes
 - **If the function you're changing has multiple callers, check ALL of them first** — a fix that's correct for one caller can break another (e.g. `estimateDataURLBytes` is used by both the Node http adapter AND Fetch; fixing one broke the other)
 - **For buffer/allocation estimates, always use byte length, not character count** — `str.length` (UTF-16 code units) ≠ `Buffer.byteLength(str, 'utf8')` for non-ASCII strings
+- **Keep JSDoc/doc comments directly above their function** — inserting a helper between a JSDoc block and its function detaches the docs (documentation tooling attaches them to the wrong symbol)
+- **Every new code branch needs its own regression test** asserting the exact new behavior — a fix without a test for THAT branch is incomplete
+- **When validating against runtime behavior, differential-test your logic against the real implementation** — write your validator/predictor, run it against thousands of targeted + fuzz cases comparing to the actual runtime, and require 0 mismatches before pushing
+- **Reply to every review thread** (bot or human) with the fix commit and a concise explanation; resolve threads once addressed
 
 ### 3. Add a regression test
 - Test that fails BEFORE the fix and passes AFTER
@@ -208,7 +212,7 @@ If you were a maintainer, you'd want contributors to:
 | Date | Repo | Outcome | Lesson |
 |------|------|---------|--------|
 | 2026-11-02 | expressjs/express | 5 PRs closed, none merged | Stacked commits + duplicates + maintainer asked to stop. Clean base branch + search first. |
-| 2026-11-02 | axios/axios | PR #11413 open, Greptile findings | Greptile bot reviews count. Fixed: allocation-guard regression, 4 regression tests, changelog entry. **Follow-up 1**: put check only in `estimateDataURLBufferAllocation` (Node), never in `estimateDataURLBytes` (used by Fetch too). **Follow-up 2**: allocation estimates must use **UTF-8 byte length**, not character count — `body.length` underestimates `Buffer.from(body, 'utf8')` for non-ASCII (é = 2 chars = 3 bytes). Verified fix against Greptile's exact cases before pushing. Tests 1708 pass, lint/format clean. |
+| 2026-11-02 | axios/axios | PR #11413 open, Greptile findings | Greptile bot reviews count. Fixed: allocation-guard regression, 4 regression tests, changelog entry. **Follow-up 1**: put check only in `estimateDataURLBufferAllocation` (Node), never in `estimateDataURLBytes` (used by Fetch too). **Follow-up 2**: allocation estimates must use **UTF-8 byte length**, not character count — `body.length` underestimates `Buffer.from(body, 'utf8')` for non-ASCII (é = 2 chars = 3 bytes). **Follow-up 3 (cubic)**: JSDoc must sit directly above its function (helpers go before the JSDoc, not between JSDoc and function); every new code branch needs its own regression test asserting the exact new behavior. **Follow-up 4 (Greptile P1, round 4)**: stray-% detection alone is insufficient — syntactically-valid escapes forming invalid UTF-8 (%FF, %C0, overlong %E0%80%80, surrogates %ED%A0%80, truncated %C3) also throw; added a streaming O(1)-space UTF-8 run validator. **Verified with differential testing**: 593 targeted + 5000 fuzz cases vs Node's decodeURIComponent, 0 mismatches, 0 bound violations. Replied to and resolved every bot review thread. Tests 1713 pass. |
 | 2026-11-02 | prettier/prettier | Issues already had open PRs or fixed on main | Always search PRs before starting work. |
 | 2026-11-02 | chalk/chalk | Issue #690 locked as spam (maintainer called out AI agents) | Some repos are hostile to AI contributions. Check maintainer tone and issue locks before investing. |
 | 2026-11-02 | commander.js | Issue #2651 already fixed in develop | Check `git log` on develop/main; "pending release" label often means already merged. |
