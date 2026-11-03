@@ -217,6 +217,7 @@ If you were a maintainer, you'd want contributors to:
 | 2026-11-02 | chalk/chalk | Issue #690 locked as spam (maintainer called out AI agents) | Some repos are hostile to AI contributions. Check maintainer tone and issue locks before investing. |
 | 2026-11-02 | commander.js | Issue #2651 already fixed in develop | Check `git log` on develop/main; "pending release" label often means already merged. |
 | 2026-11-02 | colinhacks/zod | PRs limited to collaborators; multiple people working | Check if repo accepts external PRs; check issue activity/comments first. |
+| 2026-11-02 | tessera/iamSaquib8 | PR #235 open, mergeable | Small docs/cleanup fix to remove no-op --cycles flag and imports alias. Issue #87 labeled "good first issue" by repo owner, detailed proposal in issue, CONTRIBUTING.md welcomes small tested PRs. **Key: pick issues where the maintainer wrote a detailed proposal — they've already done the design work.** Follow skill workflow exactly: clean branch from upstream/main, minimal diff, run checks, reply to reviews. |
 
 ---
 
